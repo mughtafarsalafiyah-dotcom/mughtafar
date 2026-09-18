@@ -371,7 +371,6 @@ select.search-input{cursor:pointer}
   </div>
   <div class="nav-right">
     <button class="btn-theme" onclick="toggleTheme()" title="Ganti tema">☀</button>
-    <button class="btn-admin" onclick="navigate('admin')" title="Admin Panel">⚙</button>
     <button class="hamburger" onclick="toggleMobile()">
       <span></span><span></span><span></span>
     </button>
@@ -384,7 +383,6 @@ select.search-input{cursor:pointer}
   <div class="mobile-link" onclick="navigate('quotes');closeMobile()">Quotes</div>
   <div class="mobile-link" onclick="navigate('artikel');closeMobile()">Artikel</div>
   <div class="mobile-link" onclick="navigate('tentang');closeMobile()">Tentang Kami</div>
-  <div class="mobile-link" onclick="navigate('admin');closeMobile()">⚙ Admin</div>
 </div>
 
 <!-- ══════════════════════════ BERANDA ══════════════════════════ -->
@@ -1231,7 +1229,7 @@ select.search-input{cursor:pointer}
 // ════════════════════════ SUPABASE CONFIG ════════════════════════
 const SUPABASE_URL = 'https://fwsuixlbhyujsyoozgep.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_wtDw6ojYSP-RjQ67vNAAzw_64L-CSlL';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ════════════════════════ DATA STORE ════════════════════════
 const DB = {
@@ -1263,9 +1261,9 @@ async function uploadMedia(file, folder) {
   if (file.size > 2.5*1024*1024) { showToast('Foto terlalu besar, maksimal 2.5MB'); return null; }
   const ext = file.name.split('.').pop();
   const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from('mughtafar-media').upload(path, file);
+  const { error } = await supabaseClient.storage.from('mughtafar-media').upload(path, file);
   if (error) { showToast('Gagal upload foto: ' + error.message); return null; }
-  const { data } = supabase.storage.from('mughtafar-media').getPublicUrl(path);
+  const { data } = supabaseClient.storage.from('mughtafar-media').getPublicUrl(path);
   return data.publicUrl;
 }
 
@@ -1341,7 +1339,7 @@ document.getElementById('visitorCount').textContent = visitors;
 
 // ════════════════════════ STATS ════════════════════════
 async function updateStats() {
-  const { count: anggotaCount } = await supabase.from('anggota').select('*', { count: 'exact', head: true });
+  const { count: anggotaCount } = await supabaseClient.from('anggota').select('*', { count: 'exact', head: true });
   const albums = getData('albums');
   const artikels = getData('artikels');
   const quotes = getData('quotes');
@@ -1377,7 +1375,7 @@ let anggotaCache = [];
 async function renderAnggota() {
   const grid = document.getElementById('memberGrid');
   if (grid) grid.innerHTML = '<div class="empty-state"><p>Memuat data anggota...</p></div>';
-  const { data, error } = await supabase.from('anggota').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabaseClient.from('anggota').select('*').order('created_at', { ascending: false });
   if (error) { if (grid) grid.innerHTML = '<div class="empty-state"><p>Gagal memuat data anggota.</p></div>'; return; }
   anggotaCache = data || [];
   const kelasSet = new Set(anggotaCache.map(a=>a.kelas).filter(Boolean));
@@ -1510,8 +1508,8 @@ async function saveAnggota() {
   if (foto_url) obj.foto_url = foto_url;
 
   const { error } = editId
-    ? await supabase.from('anggota').update(obj).eq('id', editId)
-    : await supabase.from('anggota').insert(obj);
+    ? await supabaseClient.from('anggota').update(obj).eq('id', editId)
+    : await supabaseClient.from('anggota').insert(obj);
 
   if (btn) { btn.disabled = false; btn.textContent = 'Simpan'; }
   if (error) { showToast('Gagal menyimpan: ' + error.message); return; }
@@ -1525,7 +1523,7 @@ async function saveAnggota() {
 async function renderAdminAnggota() {
   const tbody = document.getElementById('adminAnggotaTable');
   if (!tbody) return;
-  const { data, error } = await supabase.from('anggota').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabaseClient.from('anggota').select('*').order('created_at', { ascending: false });
   if (error) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--danger)">Gagal memuat data</td></tr>`; return; }
   if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text3)">Belum ada anggota</td></tr>'; return; }
   tbody.innerHTML = data.map(a => `
@@ -1543,7 +1541,7 @@ async function renderAdminAnggota() {
 }
 
 async function editAnggota(id) {
-  const { data: a, error } = await supabase.from('anggota').select('*').eq('id', id).single();
+  const { data: a, error } = await supabaseClient.from('anggota').select('*').eq('id', id).single();
   if (error || !a) { showToast('Gagal memuat data anggota'); return; }
   document.getElementById('modalAnggotaTitle').textContent = 'Edit Anggota';
   document.getElementById('anggotaEditId').value = id;
@@ -1560,7 +1558,7 @@ async function editAnggota(id) {
 
 async function deleteAnggota(id) {
   if (!confirm('Hapus anggota ini?')) return;
-  const { error } = await supabase.from('anggota').delete().eq('id', id);
+  const { error } = await supabaseClient.from('anggota').delete().eq('id', id);
   if (error) { showToast('Gagal menghapus: ' + error.message); return; }
   renderAdminAnggota(); showToast('Anggota dihapus');
 }
@@ -1978,7 +1976,7 @@ function deletePengurus(id) {
 // ditanyakan ke server Supabase lewat getSession()/onAuthStateChange, jadi
 // tidak bisa dipalsukan lewat localStorage atau console.
 async function checkAdminAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await supabaseClient.auth.getSession();
   const loginView = document.getElementById('adminLoginView');
   const dashView = document.getElementById('adminDashView');
   if (loginView) loginView.style.display = session ? 'none' : 'flex';
@@ -1998,7 +1996,7 @@ async function adminLogin() {
   if (!email || !pass) { errEl.textContent = 'Email dan password wajib diisi'; errEl.style.display = 'block'; return; }
 
   btn.disabled = true; btn.textContent = 'Memeriksa...';
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
   btn.disabled = false; btn.textContent = 'Masuk';
 
   if (error || !data.session) {
@@ -2017,13 +2015,13 @@ async function adminLogin() {
 }
 
 async function adminLogout() {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   navigate('beranda');
 }
 
 // Kalau sesi berakhir/di-invalidasi dari sisi server (mis. logout di tab lain,
 // token kedaluwarsa), otomatis lempar balik ke tampilan login.
-supabase.auth.onAuthStateChange((event) => {
+supabaseClient.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT' && currentPage === 'admin') checkAdminAuth();
 });
 
