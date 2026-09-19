@@ -846,7 +846,7 @@ select.search-input{cursor:pointer}
         <div class="admin-section" id="admin-anggota">
           <div class="admin-header">
             <h2 class="admin-title">Kelola Anggota</h2>
-            <button class="btn-primary btn-sm" onclick="openModal('modalAddAnggota')">+ Tambah Anggota</button>
+            <button class="btn-primary btn-sm" onclick="openAddAnggota()">+ Tambah Anggota</button>
           </div>
           <div class="table-wrap">
             <table class="data-table">
@@ -1284,6 +1284,14 @@ function navigate(page) {
   });
   document.querySelectorAll('.nav-link,.mobile-link').forEach(l => l.classList.remove('active'));
   currentPage = page;
+
+  // Halaman admin punya sidebar & header sendiri — navbar publik dan tombol
+  // mengambang (WA/IG, musik) disembunyikan supaya tidak tumpang-tindih
+  // dan tidak "menangkap" klik yang seharusnya menuju tombol admin.
+  const isAdmin = page === 'admin';
+  const navEl = document.getElementById('navbar');
+  if (navEl) navEl.style.display = isAdmin ? 'none' : 'flex';
+  document.querySelectorAll('.float-wa,.float-music').forEach(el => { el.style.display = isAdmin ? 'none' : ''; });
 
   // Sinkronkan URL: #admin hanya untuk halaman admin (pintu tersembunyi),
   // halaman lain tidak perlu mengotori address bar.
@@ -2355,7 +2363,12 @@ window.addEventListener('load', () => {
   const startEl = document.getElementById('page-'+startPage);
   if (startEl) { startEl.style.display = 'block'; startEl.classList.add('active'); }
   currentPage = startPage;
-  if (startPage === 'admin') checkAdminAuth();
+  if (startPage === 'admin') {
+    checkAdminAuth();
+    const navEl = document.getElementById('navbar');
+    if (navEl) navEl.style.display = 'none';
+    document.querySelectorAll('.float-wa,.float-music').forEach(el => { el.style.display = 'none'; });
+  }
 
   setTimeout(() => {
     document.getElementById('loader').classList.add('done');
