@@ -1027,7 +1027,11 @@ select.search-input{cursor:pointer}
         <img id="fotoPreview" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:50%;margin-top:.75rem;border:2px solid var(--border2)">
       </div>
       <div class="form-group"><label class="form-label">Nama Lengkap *</label><input type="text" class="form-input" id="anggotaNama" placeholder="Nama lengkap"></div>
-      <div class="form-group"><label class="form-label">Kamar</label><input type="text" class="form-input" id="anggotaKamar" placeholder="Contoh: Kamar 5"></div>
+      <div class="form-group"><label class="form-label">Kamar</label>
+        <select class="form-input" id="anggotaKamar">
+          <option value="">Pilih Kamar</option>
+        </select>
+      </div>
       <div class="form-group"><label class="form-label">Alamat</label><input type="text" class="form-input" id="anggotaAlamat" placeholder="Kota / Kabupaten"></div>
       <div class="form-group"><label class="form-label">Motto Pribadi</label><input type="text" class="form-input" id="anggotaMotto" placeholder="Motto atau kutipan favorit"></div>
       <div class="form-group"><label class="form-label">Keahlian / Bakat</label><input type="text" class="form-input" id="anggotaKeahlian" placeholder="Contoh: Hadroh, Kaligrafi"></div>
@@ -1281,6 +1285,11 @@ function navigate(page) {
   document.querySelectorAll('.nav-link,.mobile-link').forEach(l => l.classList.remove('active'));
   currentPage = page;
 
+  // Sinkronkan URL: #admin hanya untuk halaman admin (pintu tersembunyi),
+  // halaman lain tidak perlu mengotori address bar.
+  if (page === 'admin') { if (location.hash !== '#admin') history.replaceState(null, '', '#admin'); }
+  else if (location.hash === '#admin') { history.replaceState(null, '', location.pathname + location.search); }
+
   const pg = document.getElementById('page-'+page);
   if (pg) {
     pg.style.display = 'block';
@@ -1457,6 +1466,16 @@ function openAddAnggota() {
   document.getElementById('modalAnggotaTitle').textContent = 'Tambah Anggota';
   document.getElementById('anggotaEditId').value = '';
   openModal('modalAddAnggota');
+}
+
+// Isi pilihan Kamar 1 s/d 26 di dropdown form anggota
+function populateKamarOptions() {
+  const sel = document.getElementById('anggotaKamar');
+  if (!sel || sel.dataset.filled) return;
+  let opts = '<option value="">Pilih Kamar</option>';
+  for (let i = 1; i <= 26; i++) opts += `<option value="Kamar ${i}">Kamar ${i}</option>`;
+  sel.innerHTML = opts;
+  sel.dataset.filled = '1';
 }
 
 function clearAnggotaForm() {
@@ -2330,10 +2349,13 @@ if (albumZone) {
 
 // ════════════════════════ INIT ════════════════════════
 window.addEventListener('load', () => {
-  // Set initial page visibility - hide all, show beranda
+  // Set initial page visibility - hide all, show beranda (atau admin kalau URL-nya #admin)
   document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  const berandaPage = document.getElementById('page-beranda');
-  if (berandaPage) { berandaPage.style.display = 'block'; berandaPage.classList.add('active'); }
+  const startPage = (location.hash === '#admin') ? 'admin' : 'beranda';
+  const startEl = document.getElementById('page-'+startPage);
+  if (startEl) { startEl.style.display = 'block'; startEl.classList.add('active'); }
+  currentPage = startPage;
+  if (startPage === 'admin') checkAdminAuth();
 
   setTimeout(() => {
     document.getElementById('loader').classList.add('done');
@@ -2343,12 +2365,18 @@ window.addEventListener('load', () => {
     renderHomePhotos();
     renderHomeArticles();
     loadHeroBg();
+    populateKamarOptions();
     // Load & apply settings
     const s = getSettings();
     const aboutEl = document.getElementById('aboutText');
     if (aboutEl && s.about) aboutEl.textContent = s.about;
     applyLinks();
   }, 1800);
+});
+
+// Kalau pengunjung ketik/hapus #admin di URL tanpa reload halaman
+window.addEventListener('hashchange', () => {
+  if (location.hash === '#admin' && currentPage !== 'admin') navigate('admin');
 });
 </script>
 </body>
