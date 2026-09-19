@@ -568,9 +568,6 @@ select.search-input{cursor:pointer}
     </div>
     <div class="search-bar">
       <input type="text" class="search-input" id="searchAnggota" placeholder="Cari anggota..." oninput="filterAnggota()">
-      <select class="search-input" id="filterKelas" onchange="filterAnggota()" style="max-width:160px">
-        <option value="">Semua Kelas</option>
-      </select>
       <select class="search-input" id="filterKamar" onchange="filterAnggota()" style="max-width:160px">
         <option value="">Semua Kamar</option>
       </select>
@@ -853,8 +850,8 @@ select.search-input{cursor:pointer}
           </div>
           <div class="table-wrap">
             <table class="data-table">
-              <thead><tr><th>Foto</th><th>Nama</th><th>Kelas</th><th>Kamar</th><th>Aksi</th></tr></thead>
-              <tbody id="adminAnggotaTable"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text3)">Belum ada anggota</td></tr></tbody>
+              <thead><tr><th>Foto</th><th>Nama</th><th>Kamar</th><th>Aksi</th></tr></thead>
+              <tbody id="adminAnggotaTable"><tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text3)">Belum ada anggota</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1030,10 +1027,7 @@ select.search-input{cursor:pointer}
         <img id="fotoPreview" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:50%;margin-top:.75rem;border:2px solid var(--border2)">
       </div>
       <div class="form-group"><label class="form-label">Nama Lengkap *</label><input type="text" class="form-input" id="anggotaNama" placeholder="Nama lengkap"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-        <div class="form-group"><label class="form-label">Kelas</label><input type="text" class="form-input" id="anggotaKelas" placeholder="Contoh: 6A"></div>
-        <div class="form-group"><label class="form-label">Kamar</label><input type="text" class="form-input" id="anggotaKamar" placeholder="Contoh: Kamar 5"></div>
-      </div>
+      <div class="form-group"><label class="form-label">Kamar</label><input type="text" class="form-input" id="anggotaKamar" placeholder="Contoh: Kamar 5"></div>
       <div class="form-group"><label class="form-label">Alamat</label><input type="text" class="form-input" id="anggotaAlamat" placeholder="Kota / Kabupaten"></div>
       <div class="form-group"><label class="form-label">Motto Pribadi</label><input type="text" class="form-input" id="anggotaMotto" placeholder="Motto atau kutipan favorit"></div>
       <div class="form-group"><label class="form-label">Keahlian / Bakat</label><input type="text" class="form-input" id="anggotaKeahlian" placeholder="Contoh: Hadroh, Kaligrafi"></div>
@@ -1389,11 +1383,8 @@ async function renderAnggota() {
   const { data, error } = await supabaseClient.from('anggota').select('*').order('created_at', { ascending: false });
   if (error) { if (grid) grid.innerHTML = '<div class="empty-state"><p>Gagal memuat data anggota.</p></div>'; return; }
   anggotaCache = data || [];
-  const kelasSet = new Set(anggotaCache.map(a=>a.kelas).filter(Boolean));
   const kamarSet = new Set(anggotaCache.map(a=>a.kamar).filter(Boolean));
-  const selKelas = document.getElementById('filterKelas');
   const selKamar = document.getElementById('filterKamar');
-  if (selKelas) { const prev = selKelas.value; selKelas.innerHTML = '<option value="">Semua Kelas</option>'; kelasSet.forEach(k => selKelas.innerHTML += `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`); selKelas.value = prev; }
   if (selKamar) { const prev = selKamar.value; selKamar.innerHTML = '<option value="">Semua Kamar</option>'; kamarSet.forEach(k => selKamar.innerHTML += `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`); selKamar.value = prev; }
   filteredAnggota = anggotaCache;
   filterAnggota();
@@ -1401,11 +1392,10 @@ async function renderAnggota() {
 
 function filterAnggota() {
   const q = (document.getElementById('searchAnggota')?.value||'').toLowerCase();
-  const kelas = document.getElementById('filterKelas')?.value || '';
   const kamar = document.getElementById('filterKamar')?.value || '';
   filteredAnggota = anggotaCache.filter(a => {
     return (a.nama?.toLowerCase().includes(q) || a.alamat?.toLowerCase().includes(q)) &&
-      (!kelas || a.kelas === kelas) && (!kamar || a.kamar === kamar);
+      (!kamar || a.kamar === kamar);
   });
   anggotaPage = 1;
   renderAnggotaGrid();
@@ -1424,7 +1414,7 @@ function renderAnggotaGrid() {
       </div>
       <div class="member-info">
         <div class="member-name">${escapeHtml(a.nama||'-')}</div>
-        <div class="member-class">${escapeHtml(a.kelas||'')} ${a.kamar ? '· '+escapeHtml(a.kamar) : ''}</div>
+        ${a.kamar ? `<div class="member-class">${escapeHtml(a.kamar)}</div>` : ''}
         ${a.keahlian ? `<div style="font-size:.78rem;color:var(--text3);margin-top:.3rem">${escapeHtml(a.keahlian)}</div>` : ''}
         ${a.motto ? `<div class="member-motto">"${escapeHtml(a.motto)}"</div>` : ''}
       </div>
@@ -1454,7 +1444,7 @@ function showDetailAnggota(id) {
       ${a.motto ? `<p style="font-style:italic;color:var(--text2);font-size:.9rem;margin-top:.5rem">"${escapeHtml(a.motto)}"</p>` : ''}
     </div>
     <div style="display:grid;gap:.75rem">
-      ${row('📚 Kelas', a.kelas)}${row('🏠 Kamar', a.kamar)}${row('📍 Alamat', a.alamat)}${row('✨ Keahlian', a.keahlian)}
+      ${row('🏠 Kamar', a.kamar)}${row('📍 Alamat', a.alamat)}${row('✨ Keahlian', a.keahlian)}
     </div>
   `;
   openModal('modalDetailAnggota');
@@ -1470,7 +1460,7 @@ function openAddAnggota() {
 }
 
 function clearAnggotaForm() {
-  ['anggotaNama','anggotaKelas','anggotaKamar','anggotaAlamat','anggotaMotto','anggotaKeahlian'].forEach(id => document.getElementById(id).value = '');
+  ['anggotaNama','anggotaKamar','anggotaAlamat','anggotaMotto','anggotaKeahlian'].forEach(id => document.getElementById(id).value = '');
   const prev = document.getElementById('fotoPreview');
   prev.style.display = 'none'; prev.src = '';
   document.getElementById('fotoUploadZone').innerHTML = '<div class="upload-icon">📷</div><div class="upload-text">Klik untuk pilih foto</div><div class="upload-sub">JPG, PNG, WEBP (max 2.5MB)</div>';
@@ -1510,7 +1500,6 @@ async function saveAnggota() {
 
   const obj = {
     nama,
-    kelas: document.getElementById('anggotaKelas').value.trim(),
     kamar: document.getElementById('anggotaKamar').value.trim(),
     alamat: document.getElementById('anggotaAlamat').value.trim(),
     motto: document.getElementById('anggotaMotto').value.trim(),
@@ -1541,7 +1530,6 @@ async function renderAdminAnggota() {
     <tr>
       <td>${a.foto_url ? `<img src="${escapeHtml(a.foto_url)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">` : `<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:1.1rem">${escapeHtml(a.nama?.[0]||'?')}</div>`}</td>
       <td style="font-weight:500;color:var(--text)">${escapeHtml(a.nama||'-')}</td>
-      <td>${escapeHtml(a.kelas||'-')}</td>
       <td>${escapeHtml(a.kamar||'-')}</td>
       <td style="display:flex;gap:.5rem">
         <button class="btn-edit" onclick="editAnggota('${a.id}')">Edit</button>
@@ -1557,7 +1545,6 @@ async function editAnggota(id) {
   document.getElementById('modalAnggotaTitle').textContent = 'Edit Anggota';
   document.getElementById('anggotaEditId').value = id;
   document.getElementById('anggotaNama').value = a.nama||'';
-  document.getElementById('anggotaKelas').value = a.kelas||'';
   document.getElementById('anggotaKamar').value = a.kamar||'';
   document.getElementById('anggotaAlamat').value = a.alamat||'';
   document.getElementById('anggotaMotto').value = a.motto||'';
