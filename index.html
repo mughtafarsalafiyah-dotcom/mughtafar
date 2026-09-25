@@ -941,6 +941,16 @@ select.search-input{cursor:pointer}
               <button class="btn-primary btn-sm" style="margin-top:1rem" onclick="saveHeroBg()" id="heroBgSaveBtn">Simpan Background</button>
             </div>
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem">
+              <h3 style="font-family:var(--font-serif);color:var(--text);margin-bottom:1rem">🎵 Musik Sholawat</h3>
+              <p style="font-size:.85rem;color:var(--text3);margin-bottom:1rem">File ini yang diputar lewat tombol musik mengambang, terdengar oleh semua pengunjung yang menekannya.</p>
+              <audio id="musicPreviewPlayer" controls style="width:100%;display:none;margin-bottom:.75rem"></audio>
+              <div class="upload-zone" onclick="document.getElementById('musicInput').click()" id="musicUploadZone">
+                <div class="upload-icon">🎵</div><div class="upload-text">Klik untuk pilih file musik</div><div class="upload-sub">MP3, OGG, WAV (max 8MB)</div>
+              </div>
+              <input type="file" id="musicInput" accept="audio/*" style="display:none" onchange="previewMusicFile(this)">
+              <button class="btn-primary btn-sm" style="margin-top:1rem" onclick="saveMusic()" id="musicSaveBtn">Simpan Musik</button>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem">
               <h3 style="font-family:var(--font-serif);color:var(--text);margin-bottom:1.25rem">🔗 Link Media Sosial</h3>
               <div class="form-group">
                 <label class="form-label" style="display:flex;align-items:center;gap:.5rem">
@@ -2172,6 +2182,7 @@ function loadSettings() {
   const tt = document.getElementById('settTT'); if(tt) tt.value = s.tt||'';
   const yt = document.getElementById('settYT'); if(yt) yt.value = s.yt||'';
   loadHeroBg();
+  loadMusic();
 }
 
 function applyLinks() {
@@ -2241,6 +2252,56 @@ async function loadHeroBg() {
 function applyHeroBg(url) {
   const el = document.getElementById('heroBg');
   if (el) el.style.setProperty('--hero-img', `url("${url}")`);
+}
+
+// ════════════════════════ MUSIK SHOLAWAT (Supabase) ════════════════════════
+let selectedMusicFile = null;
+function previewMusicFile(input) {
+  const file = input.files[0]; if (!file) return;
+  const okTypes = ['audio/mpeg','audio/mp3','audio/ogg','audio/wav','audio/x-wav'];
+  if (!okTypes.includes(file.type) && !/\.(mp3|ogg|wav)$/i.test(file.name)) { showToast('Format harus MP3, OGG, atau WAV'); return; }
+  if (file.size > 8*1024*1024) { showToast('File terlalu besar, maks 8MB'); return; }
+  selectedMusicFile = file;
+  const player = document.getElementById('musicPreviewPlayer');
+  player.src = URL.createObjectURL(file);
+  player.style.display = 'block';
+  document.getElementById('musicUploadZone').style.display = 'none';
+}
+
+async function saveMusic() {
+  if (!selectedMusicFile) { showToast('Pilih file musik dulu'); return; }
+  const btn = document.getElementById('musicSaveBtn');
+  btn.disabled = true; btn.textContent = 'Mengupload...';
+  const ext = selectedMusicFile.name.split('.').pop();
+  const path = `musik/${crypto.randomUUID()}.${ext}`;
+  const { error: upErr } = await supabaseClient.storage.from('mughtafar-media').upload(path, selectedMusicFile);
+  if (upErr) { showToast('Gagal upload: ' + upErr.message); btn.disabled = false; btn.textContent = 'Simpan Musik'; return; }
+  const { data: pub } = supabaseClient.storage.from('mughtafar-media').getPublicUrl(path);
+  const { error } = await supabaseClient.from('settings').update({ music_url: pub.publicUrl }).eq('id', 1);
+  btn.disabled = false; btn.textContent = 'Simpan Musik';
+  if (error) { showToast('Gagal menyimpan: ' + error.message); return; }
+  selectedMusicFile = null;
+  applyMusic(pub.publicUrl);
+  showToast('Musik berhasil diganti ✓');
+}
+
+async function loadMusic() {
+  const { data, error } = await supabaseClient.from('settings').select('music_url').eq('id', 1).single();
+  if (error || !data || !data.music_url) return;
+  applyMusic(data.music_url);
+  const player = document.getElementById('musicPreviewPlayer');
+  const zone = document.getElementById('musicUploadZone');
+  if (player) { player.src = data.music_url; player.style.display = 'block'; }
+  if (zone) zone.style.display = 'none';
+}
+
+function applyMusic(url) {
+  const audio = document.getElementById('bgMusic');
+  if (!audio) return;
+  const wasPlaying = !audio.paused;
+  audio.querySelector('source').src = url;
+  audio.load();
+  if (wasPlaying) audio.play().catch(()=>{});
 }
 
 function saveSocmed() {
@@ -2378,6 +2439,7 @@ window.addEventListener('load', () => {
     renderHomePhotos();
     renderHomeArticles();
     loadHeroBg();
+    loadMusic();
     populateKamarOptions();
     // Load & apply settings
     const s = getSettings();
