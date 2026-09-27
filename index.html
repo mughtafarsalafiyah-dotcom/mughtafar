@@ -568,8 +568,8 @@ select.search-input{cursor:pointer}
     </div>
     <div class="search-bar">
       <input type="text" class="search-input" id="searchAnggota" placeholder="Cari anggota..." oninput="filterAnggota()">
-      <select class="search-input" id="filterKamar" onchange="filterAnggota()" style="max-width:160px">
-        <option value="">Semua Kamar</option>
+      <select class="search-input" id="filterDomisili" onchange="filterAnggota()" style="max-width:160px">
+        <option value="">Semua Domisili</option>
       </select>
     </div>
     <div class="member-grid" id="memberGrid">
@@ -850,7 +850,7 @@ select.search-input{cursor:pointer}
           </div>
           <div class="table-wrap">
             <table class="data-table">
-              <thead><tr><th>Foto</th><th>Nama</th><th>Kamar</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>Foto</th><th>Nama</th><th>Domisili</th><th>Aksi</th></tr></thead>
               <tbody id="adminAnggotaTable"><tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text3)">Belum ada anggota</td></tr></tbody>
             </table>
           </div>
@@ -1037,14 +1037,16 @@ select.search-input{cursor:pointer}
         <img id="fotoPreview" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:50%;margin-top:.75rem;border:2px solid var(--border2)">
       </div>
       <div class="form-group"><label class="form-label">Nama Lengkap *</label><input type="text" class="form-input" id="anggotaNama" placeholder="Nama lengkap"></div>
-      <div class="form-group"><label class="form-label">Kamar</label>
-        <select class="form-input" id="anggotaKamar">
-          <option value="">Pilih Kamar</option>
+      <div class="form-group"><label class="form-label">Domisili</label>
+        <select class="form-input" id="anggotaDomisili">
+          <option value="">Pilih Domisili</option>
         </select>
       </div>
       <div class="form-group"><label class="form-label">Alamat</label><input type="text" class="form-input" id="anggotaAlamat" placeholder="Kota / Kabupaten"></div>
       <div class="form-group"><label class="form-label">Motto Pribadi</label><input type="text" class="form-input" id="anggotaMotto" placeholder="Motto atau kutipan favorit"></div>
       <div class="form-group"><label class="form-label">Organisasi</label><input type="text" class="form-input" id="anggotaOrganisasi" placeholder="Contoh: Hadroh, Kaligrafi"></div>
+      <div class="form-group"><label class="form-label">Tentang</label><textarea class="form-input" id="anggotaTentang" rows="3" placeholder="Bio singkat anggota"></textarea></div>
+      <div class="form-group"><label class="form-label">Medsos</label><input type="text" class="form-input" id="anggotaMedsos" placeholder="Link Instagram/WhatsApp, dll"></div>
       <button class="btn-primary w100 mt1" onclick="saveAnggota()">Simpan Anggota</button>
     </div>
   </div>
@@ -1186,7 +1188,7 @@ select.search-input{cursor:pointer}
 <div class="lightbox" id="lightbox">
   <button class="lb-close" onclick="closeLightbox()">✕</button>
   <img id="lightboxImg" src="" alt="Foto">
-  <div class="lightbox-controls">
+  <div class="lightbox-controls" id="lightboxControls">
     <button class="lb-btn" onclick="lbPrev()">←</button>
     <button class="lb-btn" onclick="lbNext()">→</button>
   </div>
@@ -1410,19 +1412,19 @@ async function renderAnggota() {
   const { data, error } = await supabaseClient.from('anggota').select('*').order('created_at', { ascending: false });
   if (error) { if (grid) grid.innerHTML = '<div class="empty-state"><p>Gagal memuat data anggota.</p></div>'; return; }
   anggotaCache = data || [];
-  const kamarSet = new Set(anggotaCache.map(a=>a.kamar).filter(Boolean));
-  const selKamar = document.getElementById('filterKamar');
-  if (selKamar) { const prev = selKamar.value; selKamar.innerHTML = '<option value="">Semua Kamar</option>'; kamarSet.forEach(k => selKamar.innerHTML += `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`); selKamar.value = prev; }
+  const domisiliSet = new Set(anggotaCache.map(a=>a.domisili).filter(Boolean));
+  const selDomisili = document.getElementById('filterDomisili');
+  if (selDomisili) { const prev = selDomisili.value; selDomisili.innerHTML = '<option value="">Semua Domisili</option>'; domisiliSet.forEach(k => selDomisili.innerHTML += `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`); selDomisili.value = prev; }
   filteredAnggota = anggotaCache;
   filterAnggota();
 }
 
 function filterAnggota() {
   const q = (document.getElementById('searchAnggota')?.value||'').toLowerCase();
-  const kamar = document.getElementById('filterKamar')?.value || '';
+  const domisili = document.getElementById('filterDomisili')?.value || '';
   filteredAnggota = anggotaCache.filter(a => {
     return (a.nama?.toLowerCase().includes(q) || a.alamat?.toLowerCase().includes(q)) &&
-      (!kamar || a.kamar === kamar);
+      (!domisili || a.domisili === domisili);
   });
   anggotaPage = 1;
   renderAnggotaGrid();
@@ -1441,8 +1443,8 @@ function renderAnggotaGrid() {
       </div>
       <div class="member-info">
         <div class="member-name">${escapeHtml(a.nama||'-')}</div>
-        ${a.kamar ? `<div class="member-class">${escapeHtml(a.kamar)}</div>` : ''}
-        ${a.keahlian ? `<div style="font-size:.78rem;color:var(--text3);margin-top:.3rem">${escapeHtml(a.keahlian)}</div>` : ''}
+        ${a.domisili ? `<div class="member-class">${escapeHtml(a.domisili)}</div>` : ''}
+        ${a.organisasi ? `<div style="font-size:.78rem;color:var(--text3);margin-top:.3rem">${escapeHtml(a.organisasi)}</div>` : ''}
         ${a.motto ? `<div class="member-motto">"${escapeHtml(a.motto)}"</div>` : ''}
       </div>
     </div>
@@ -1464,15 +1466,21 @@ function renderPagination() {
 function showDetailAnggota(id) {
   const a = anggotaCache.find(x=>x.id===id);
   if (!a) return;
+  const medsosHtml = a.medsos
+    ? (/^https?:\/\//i.test(a.medsos.trim())
+        ? `<a href="${escapeHtml(a.medsos.trim())}" target="_blank" rel="noopener" style="color:var(--accent)">${escapeHtml(a.medsos)}</a>`
+        : escapeHtml(a.medsos))
+    : '';
   document.getElementById('detailAnggotaBody').innerHTML = `
     <div style="text-align:center;margin-bottom:1.5rem">
-      ${a.foto_url ? `<img src="${escapeHtml(a.foto_url)}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--accent)">` : `<div style="width:100px;height:100px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:2.5rem;color:var(--accent);margin:0 auto">${escapeHtml(a.nama?.[0]||'?')}</div>`}
+      ${a.foto_url ? `<img src="${escapeHtml(a.foto_url)}" onclick="openPhotoLightbox('${escapeHtml(a.foto_url)}')" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);cursor:pointer" title="Klik untuk perbesar">` : `<div style="width:100px;height:100px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:2.5rem;color:var(--accent);margin:0 auto">${escapeHtml(a.nama?.[0]||'?')}</div>`}
       <h3 style="font-family:var(--font-serif);font-size:1.3rem;color:var(--text);margin-top:1rem">${escapeHtml(a.nama||'-')}</h3>
       ${a.motto ? `<p style="font-style:italic;color:var(--text2);font-size:.9rem;margin-top:.5rem">"${escapeHtml(a.motto)}"</p>` : ''}
     </div>
     <div style="display:grid;gap:.75rem">
-      ${row('🏠 Kamar', a.kamar)}${row('📍 Alamat', a.alamat)}${row('✨ Keahlian', a.keahlian)}
+      ${row('🏠 Domisili', a.domisili)}${row('📍 Alamat', a.alamat)}${row('🏷️ Organisasi', a.organisasi)}${a.medsos ? `<div style="display:flex;gap:1rem;font-size:.9rem"><span style="color:var(--text3);min-width:100px">📱 Medsos</span><span>${medsosHtml}</span></div>` : ''}
     </div>
+    ${a.tentang ? `<div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)"><div style="font-size:.8rem;color:var(--text3);margin-bottom:.4rem">Tentang</div><p style="font-size:.9rem;color:var(--text);line-height:1.6">${escapeHtml(a.tentang)}</p></div>` : ''}
   `;
   openModal('modalDetailAnggota');
 }
@@ -1486,18 +1494,19 @@ function openAddAnggota() {
   openModal('modalAddAnggota');
 }
 
-// Isi pilihan Kamar 1 s/d 26 di dropdown form anggota
+// Isi pilihan Domisili (Kamar 1 s/d 27, plus Khoriji) di dropdown form anggota
 function populateKamarOptions() {
-  const sel = document.getElementById('anggotaKamar');
+  const sel = document.getElementById('anggotaDomisili');
   if (!sel || sel.dataset.filled) return;
-  let opts = '<option value="">Pilih Kamar</option>';
-  for (let i = 1; i <= 26; i++) opts += `<option value="Kamar ${i}">Kamar ${i}</option>`;
+  let opts = '<option value="">Pilih Domisili</option>';
+  for (let i = 1; i <= 27; i++) opts += `<option value="Kamar ${i}">Kamar ${i}</option>`;
+  opts += `<option value="Khoriji">Khoriji</option>`;
   sel.innerHTML = opts;
   sel.dataset.filled = '1';
 }
 
 function clearAnggotaForm() {
-  ['anggotaNama','anggotaKamar','anggotaAlamat','anggotaMotto','anggotaKeahlian'].forEach(id => document.getElementById(id).value = '');
+  ['anggotaNama','anggotaDomisili','anggotaAlamat','anggotaMotto','anggotaOrganisasi','anggotaTentang','anggotaMedsos'].forEach(id => document.getElementById(id).value = '');
   const prev = document.getElementById('fotoPreview');
   prev.style.display = 'none'; prev.src = '';
   document.getElementById('fotoUploadZone').innerHTML = '<div class="upload-icon">📷</div><div class="upload-text">Klik untuk pilih foto</div><div class="upload-sub">JPG, PNG, WEBP (max 2.5MB)</div>';
@@ -1537,10 +1546,12 @@ async function saveAnggota() {
 
   const obj = {
     nama,
-    kamar: document.getElementById('anggotaKamar').value.trim(),
+    domisili: document.getElementById('anggotaDomisili').value.trim(),
     alamat: document.getElementById('anggotaAlamat').value.trim(),
     motto: document.getElementById('anggotaMotto').value.trim(),
-    keahlian: document.getElementById('anggotaKeahlian').value.trim(),
+    organisasi: document.getElementById('anggotaOrganisasi').value.trim(),
+    tentang: document.getElementById('anggotaTentang').value.trim(),
+    medsos: document.getElementById('anggotaMedsos').value.trim(),
   };
   if (foto_url) obj.foto_url = foto_url;
 
@@ -1567,7 +1578,7 @@ async function renderAdminAnggota() {
     <tr>
       <td>${a.foto_url ? `<img src="${escapeHtml(a.foto_url)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">` : `<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:1.1rem">${escapeHtml(a.nama?.[0]||'?')}</div>`}</td>
       <td style="font-weight:500;color:var(--text)">${escapeHtml(a.nama||'-')}</td>
-      <td>${escapeHtml(a.kamar||'-')}</td>
+      <td>${escapeHtml(a.domisili||'-')}</td>
       <td style="display:flex;gap:.5rem">
         <button class="btn-edit" onclick="editAnggota('${a.id}')">Edit</button>
         <button class="btn-danger" onclick="deleteAnggota('${a.id}')">Hapus</button>
@@ -1582,10 +1593,12 @@ async function editAnggota(id) {
   document.getElementById('modalAnggotaTitle').textContent = 'Edit Anggota';
   document.getElementById('anggotaEditId').value = id;
   document.getElementById('anggotaNama').value = a.nama||'';
-  document.getElementById('anggotaKamar').value = a.kamar||'';
+  document.getElementById('anggotaDomisili').value = a.domisili||'';
   document.getElementById('anggotaAlamat').value = a.alamat||'';
   document.getElementById('anggotaMotto').value = a.motto||'';
-  document.getElementById('anggotaKeahlian').value = a.keahlian||'';
+  document.getElementById('anggotaOrganisasi').value = a.organisasi||'';
+  document.getElementById('anggotaTentang').value = a.tentang||'';
+  document.getElementById('anggotaMedsos').value = a.medsos||'';
   selectedFotoAnggota = null;
   if (a.foto_url) { const prev = document.getElementById('fotoPreview'); prev.src = a.foto_url; prev.style.display='block'; document.getElementById('fotoUploadZone').style.display='none'; }
   openModal('modalAddAnggota');
@@ -1653,11 +1666,19 @@ function openLightbox(idx, albumId) {
   currentAlbumId = albumId; currentPhotoIdx = idx;
   const photos = photosOf(albumId); if (!photos.length) return;
   document.getElementById('lightboxImg').src = photos[idx].photo_url;
+  document.getElementById('lightboxControls').style.display = 'flex';
   document.getElementById('lightbox').classList.add('open');
 }
 function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
 function lbNext() { const photos = photosOf(currentAlbumId); if (!photos.length) return; currentPhotoIdx=(currentPhotoIdx+1)%photos.length; document.getElementById('lightboxImg').src=photos[currentPhotoIdx].photo_url; }
 function lbPrev() { const photos = photosOf(currentAlbumId); if (!photos.length) return; currentPhotoIdx=(currentPhotoIdx-1+photos.length)%photos.length; document.getElementById('lightboxImg').src=photos[currentPhotoIdx].photo_url; }
+
+// Lightbox untuk 1 foto saja (mis. foto profil anggota) - tombol navigasi disembunyikan
+function openPhotoLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightboxControls').style.display = 'none';
+  document.getElementById('lightbox').classList.add('open');
+}
 
 function previewAlbumFotos(input) {
   const files = Array.from(input.files);
