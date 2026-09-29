@@ -1289,7 +1289,9 @@ async function uploadMedia(file, folder) {
 
 // ════════════════════════ NAV ════════════════════════
 let currentPage = 'beranda';
-function navigate(page) {
+let isRouting = false; // true saat navigasi dipicu oleh Back/Forward/hash manual, supaya tidak dobel push history
+
+function navigate(page, customHash) {
   document.querySelectorAll('.page').forEach(p => {
     p.classList.remove('active');
     p.style.display = 'none';
@@ -1305,10 +1307,19 @@ function navigate(page) {
   if (navEl) navEl.style.display = isAdmin ? 'none' : 'flex';
   document.querySelectorAll('.float-wa,.float-music').forEach(el => { el.style.display = isAdmin ? 'none' : ''; });
 
-  // Sinkronkan URL: #admin hanya untuk halaman admin (pintu tersembunyi),
-  // halaman lain tidak perlu mengotori address bar.
-  if (page === 'admin') { if (location.hash !== '#admin') history.replaceState(null, '', '#admin'); }
-  else if (location.hash === '#admin') { history.replaceState(null, '', location.pathname + location.search); }
+  // Setiap halaman punya alamat URL sendiri (lewat #hash), supaya tombol
+  // Back/Forward browser berfungsi dan link bisa dibagikan ke halaman
+  // spesifik (mis. #artikel/ID). Tidak dijalankan kalau navigate() ini
+  // dipanggil OLEH router sendiri (respon ke tombol Back), supaya tidak
+  // dobel menambah riwayat.
+  if (!isRouting) {
+    const hashVal = customHash !== undefined ? customHash : (page === 'beranda' ? '' : page);
+    const desiredHash = hashVal ? '#' + hashVal : '';
+    if (location.hash !== desiredHash) {
+      const url = location.pathname + location.search + desiredHash;
+      history.pushState({ page, customHash: hashVal }, '', url);
+    }
+  }
 
   const pg = document.getElementById('page-'+page);
   if (pg) {
@@ -1335,6 +1346,41 @@ function navigate(page) {
   if (page==='admin') checkAdminAuth();
   initReveal();
 }
+
+// ════════════════════════ ROUTER (baca alamat URL) ════════════════════════
+const ROUTABLE_PAGES = ['beranda','anggota','dokumentasi','quotes','artikel','tentang'];
+
+async function routeFromHash() {
+  isRouting = true;
+  const h = location.hash.replace(/^#/, '');
+  if (!h) { navigate('beranda'); }
+  else if (h === 'admin') { navigate('admin'); }
+  else {
+    const [base, id] = h.split('/');
+    if (base === 'artikel' && id) { await openArtikelRoute(id); }
+    else if (base === 'dokumentasi' && id) { await openAlbumRoute(id); }
+    else if (ROUTABLE_PAGES.includes(base)) { navigate(base); }
+    else { navigate('beranda'); }
+  }
+  isRouting = false;
+}
+
+async function openArtikelRoute(id) {
+  if (!artikelCache.length) {
+    const { data } = await supabaseClient.from('artikels').select('*');
+    artikelCache = data || [];
+  }
+  openArtikel(id);
+}
+async function openAlbumRoute(id) {
+  if (!albumsCache.length) { await loadAlbumsData(); }
+  openAlbum(id);
+}
+
+// Tombol Back/Forward browser
+window.addEventListener('popstate', routeFromHash);
+// Kalau ada yang ketik/ubah #hash manual di address bar tanpa reload
+window.addEventListener('hashchange', routeFromHash);
 
 function toggleMobile() {
   document.getElementById('mobileMenu').classList.toggle('open');
@@ -1658,7 +1704,7 @@ function openAlbum(id) {
   if (!photos.length) { html = '<div class="empty-state"><div class="icon">📸</div><p>Album ini belum memiliki foto.</p></div>'; }
   else html = photos.map((p,i) => `<div class="photo-item" onclick="openLightbox(${i},'${id}')"><img src="${escapeHtml(p.photo_url)}" loading="lazy"><div class="photo-overlay">🔍</div></div>`).join('');
   document.getElementById('albumPhotoGrid').innerHTML = html;
-  navigate('album-detail');
+  navigate('album-detail', 'dokumentasi/'+id);
 }
 
 let currentAlbumId = '', currentPhotoIdx = 0;
@@ -1885,6 +1931,7 @@ async function startSlider() {
 // ════════════════════════ ARTIKEL (Supabase) ════════════════════════
 let selectedArtikelCover = null;
 let artikelCache = [];
+let currentArtikelId = null;
 async function renderArtikel() {
   const grid = document.getElementById('artikelGrid');
   if (grid) grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>Memuat...</p></div>';
@@ -1924,6 +1971,7 @@ function formatTanggal(iso) {
 
 function openArtikel(id) {
   const a = artikelCache.find(x=>x.id===id); if(!a) return;
+  currentArtikelId = id;
   document.getElementById('readerCat').textContent = a.kategori||'Umum';
   document.getElementById('readerTitle').textContent = a.judul;
   document.getElementById('readerAuthor').textContent = a.penulis||'Tim Mughtafar';
@@ -1935,7 +1983,7 @@ function openArtikel(id) {
   document.getElementById('readerContent').innerHTML = window.DOMPurify ? DOMPurify.sanitize(a.isi||'') : stripHtml(a.isi||'');
   const coverEl = document.getElementById('readerCover');
   if (a.cover_url) { document.getElementById('readerCoverImg').src = a.cover_url; coverEl.style.display='block'; } else coverEl.style.display='none';
-  navigate('artikel-baca');
+  navigate('artikel-baca', 'artikel/'+id);
 }
 
 async function saveArtikel() {
@@ -2012,7 +2060,10 @@ function fmt(cmd) { document.execCommand(cmd, false, null); document.getElementB
 function insertHeading() { document.execCommand('formatBlock', false, 'h2'); document.getElementById('artikelIsi').focus(); }
 function insertList() { document.execCommand('insertUnorderedList', false, null); document.getElementById('artikelIsi').focus(); }
 
-function shareArticle() { navigator.clipboard?.writeText(location.href).then(()=>showToast('Link disalin!')).catch(()=>showToast('Salin URL dari address bar')); }
+function shareArticle() {
+  const url = location.origin + location.pathname + (currentArtikelId ? '#artikel/'+currentArtikelId : '');
+  navigator.clipboard?.writeText(url).then(()=>showToast('Link disalin!')).catch(()=>showToast('Salin URL dari address bar'));
+}
 
 // HOME ARTICLES
 async function renderHomeArticles() {
@@ -2439,26 +2490,18 @@ if (albumZone) {
 
 // ════════════════════════ INIT ════════════════════════
 window.addEventListener('load', () => {
-  // Set initial page visibility - hide all, show beranda (atau admin kalau URL-nya #admin)
+  // Set halaman awal sesuai alamat URL saat ini (beranda kalau kosong,
+  // atau halaman/artikel/album tertentu kalau ada #hash-nya)
   document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  const startPage = (location.hash === '#admin') ? 'admin' : 'beranda';
-  const startEl = document.getElementById('page-'+startPage);
-  if (startEl) { startEl.style.display = 'block'; startEl.classList.add('active'); }
-  currentPage = startPage;
-  if (startPage === 'admin') {
-    checkAdminAuth();
-    const navEl = document.getElementById('navbar');
-    if (navEl) navEl.style.display = 'none';
-    document.querySelectorAll('.float-wa,.float-music').forEach(el => { el.style.display = 'none'; });
-  }
+  isRouting = true; // supaya routing awal ini tidak menambah riwayat baru
+  routeFromHash();
+  isRouting = false;
 
   setTimeout(() => {
     document.getElementById('loader').classList.add('done');
     updateStats();
     initReveal();
     startSlider();
-    renderHomePhotos();
-    renderHomeArticles();
     loadHeroBg();
     loadMusic();
     populateKamarOptions();
@@ -2468,11 +2511,6 @@ window.addEventListener('load', () => {
     if (aboutEl && s.about) aboutEl.textContent = s.about;
     applyLinks();
   }, 1800);
-});
-
-// Kalau pengunjung ketik/hapus #admin di URL tanpa reload halaman
-window.addEventListener('hashchange', () => {
-  if (location.hash === '#admin' && currentPage !== 'admin') navigate('admin');
 });
 </script>
 </body>
