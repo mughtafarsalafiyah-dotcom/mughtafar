@@ -618,11 +618,11 @@ select.search-input{cursor:pointer}
       <input type="text" class="search-input" id="searchQuote" placeholder="Cari quotes..." oninput="filterQuotes()">
       <select class="search-input" id="filterKatQuote" onchange="filterQuotes()" style="max-width:180px">
         <option value="">Semua Kategori</option>
-        <option value="Islami">Masyayikh</option>
-        <option value="Motivasi">Gawagis</option>
-        <option value="Persahabatan">Asatidz</option>
-        <option value="Semangat Belajar">Santri</option>
-        <option value="Kehidupan Santri">Umum</option>
+        <option value="Masyayikh">Masyayikh</option>
+        <option value="Gawagis">Gawagis</option>
+        <option value="Asatidz">Asatidz</option>
+        <option value="Santri">Santri</option>
+        <option value="Umum">Umum</option>
       </select>
     </div>
     <div class="quotes-grid" id="quotesGrid">
@@ -1410,25 +1410,32 @@ function applyTheme() {
 function toggleTheme() { isDark = !isDark; applyTheme(); }
 applyTheme();
 
-// ════════════════════════ VISITOR ════════════════════════
-let visitors = parseInt(localStorage.getItem('mug_visitors') || '0');
-visitors++;
-localStorage.setItem('mug_visitors', visitors);
-document.getElementById('visitorCount').textContent = visitors;
+// ════════════════════════ VISITOR (Supabase, dihitung di server) ════════════════════════
+// Dihitung lewat fungsi database (bukan update tabel langsung) supaya
+// pengunjung yang belum login tetap bisa menambah hitungan dengan aman,
+// tanpa perlu diberi akses tulis ke tabel settings.
+async function trackVisitor() {
+  const { data, error } = await supabaseClient.rpc('increment_visitors');
+  if (error) return;
+  const el = document.getElementById('visitorCount');
+  if (el) el.textContent = data;
+}
 
 // ════════════════════════ STATS ════════════════════════
 async function updateStats() {
-  const [{ count: anggotaCount }, { count: fotoCount }, { count: artikelCount }, { count: quotesCount }] = await Promise.all([
+  const [{ count: anggotaCount }, { count: fotoCount }, { count: artikelCount }, { count: quotesCount }, settingsRow] = await Promise.all([
     supabaseClient.from('anggota').select('*', { count: 'exact', head: true }),
     supabaseClient.from('album_photos').select('*', { count: 'exact', head: true }),
     supabaseClient.from('artikels').select('*', { count: 'exact', head: true }),
     supabaseClient.from('quotes').select('*', { count: 'exact', head: true }),
+    supabaseClient.from('settings').select('visitor_count').eq('id', 1).single(),
   ]);
+  const visitorCount = settingsRow?.data?.visitor_count || 0;
 
   ['statAnggota','dashAnggota'].forEach(id => { const el=document.getElementById(id); if(el) animCount(el, anggotaCount||0); });
   ['statFoto','dashFoto'].forEach(id => { const el=document.getElementById(id); if(el) animCount(el, fotoCount||0); });
   ['statArtikel','dashArtikel'].forEach(id => { const el=document.getElementById(id); if(el) animCount(el, artikelCount||0); });
-  ['statPengunjung'].forEach(id => { const el=document.getElementById(id); if(el) animCount(el, visitors); });
+  ['statPengunjung'].forEach(id => { const el=document.getElementById(id); if(el) animCount(el, visitorCount); });
   const dq = document.getElementById('dashQuotes'); if(dq) animCount(dq, quotesCount||0);
 }
 
@@ -2245,8 +2252,16 @@ function refreshAdminData() {
   updateStats();
 }
 
-function loadSettings() {
-  const s = getSettings();
+let settingsCache = null;
+async function loadRemoteSettings(force) {
+  if (settingsCache && !force) return settingsCache;
+  const { data, error } = await supabaseClient.from('settings').select('*').eq('id', 1).single();
+  if (!error && data) settingsCache = data;
+  return settingsCache || {};
+}
+
+async function loadSettings() {
+  const s = await loadRemoteSettings(true);
   const el = document.getElementById('settAbout'); if(el) el.value = s.about||'';
   const wa = document.getElementById('settWA'); if(wa) wa.value = s.wa||'';
   const ig = document.getElementById('settIG'); if(ig) ig.value = s.ig||'';
@@ -2257,8 +2272,10 @@ function loadSettings() {
   loadMusic();
 }
 
-function applyLinks() {
-  const s = getSettings();
+async function applyLinks() {
+  const s = await loadRemoteSettings();
+  const aboutEl = document.getElementById('aboutText');
+  if (aboutEl && s.about) aboutEl.textContent = s.about;
   // WhatsApp
   const wa = s.wa ? 'https://wa.me/'+s.wa.replace(/\D/g,'') : '#';
   ['floatWA','footerWA'].forEach(id => { const el=document.getElementById(id); if(el) el.href=wa; });
@@ -2270,13 +2287,12 @@ function applyLinks() {
   });
 }
 
-function saveSettings() {
-  const s = getSettings();
-  s.about = document.getElementById('settAbout').value;
-  s.wa = document.getElementById('settWA').value.replace(/\D/g,'');
-  DB.set('settings', s);
-  const aboutEl = document.getElementById('aboutText');
-  if (aboutEl && s.about) aboutEl.textContent = s.about;
+async function saveSettings() {
+  const about = document.getElementById('settAbout').value;
+  const wa = document.getElementById('settWA').value.replace(/\D/g,'');
+  const { error } = await supabaseClient.from('settings').update({ about, wa }).eq('id', 1);
+  if (error) { showToast('Gagal menyimpan: ' + error.message); return; }
+  await loadRemoteSettings(true);
   applyLinks();
   showToast('Pengaturan disimpan ✓');
 }
@@ -2376,13 +2392,14 @@ function applyMusic(url) {
   if (wasPlaying) audio.play().catch(()=>{});
 }
 
-function saveSocmed() {
-  const s = getSettings();
-  s.ig = document.getElementById('settIG').value.trim();
-  s.fb = document.getElementById('settFB').value.trim();
-  s.tt = document.getElementById('settTT').value.trim();
-  s.yt = document.getElementById('settYT').value.trim();
-  DB.set('settings', s);
+async function saveSocmed() {
+  const ig = document.getElementById('settIG').value.trim();
+  const fb = document.getElementById('settFB').value.trim();
+  const tt = document.getElementById('settTT').value.trim();
+  const yt = document.getElementById('settYT').value.trim();
+  const { error } = await supabaseClient.from('settings').update({ ig, fb, tt, yt }).eq('id', 1);
+  if (error) { showToast('Gagal menyimpan: ' + error.message); return; }
+  await loadRemoteSettings(true);
   applyLinks();
   showToast('Link medsos disimpan ✓');
 }
@@ -2415,7 +2432,7 @@ async function backupData() {
   const bk = {
     anggota: anggota.data||[], albums: albums.data||[], album_photos: album_photos.data||[],
     quotes: quotes.data||[], artikels: artikels.data||[], pengurus: pengurus.data||[],
-    settings: getSettings()
+    settings: await loadRemoteSettings(true)
   };
   const blob = new Blob([JSON.stringify(bk, null, 2)], {type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mughtafar-backup-'+new Date().toISOString().split('T')[0]+'.json'; a.click();
@@ -2493,9 +2510,13 @@ window.addEventListener('load', () => {
   // Set halaman awal sesuai alamat URL saat ini (beranda kalau kosong,
   // atau halaman/artikel/album tertentu kalau ada #hash-nya)
   document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  const isDirectAdminVisit = location.hash === '#admin';
   isRouting = true; // supaya routing awal ini tidak menambah riwayat baru
   routeFromHash();
   isRouting = false;
+
+  // Hitung kunjungan nyata saja (bukan saat admin langsung buka dashboard)
+  if (!isDirectAdminVisit) trackVisitor();
 
   setTimeout(() => {
     document.getElementById('loader').classList.add('done');
@@ -2505,10 +2526,6 @@ window.addEventListener('load', () => {
     loadHeroBg();
     loadMusic();
     populateKamarOptions();
-    // Load & apply settings
-    const s = getSettings();
-    const aboutEl = document.getElementById('aboutText');
-    if (aboutEl && s.about) aboutEl.textContent = s.about;
     applyLinks();
   }, 1800);
 });
