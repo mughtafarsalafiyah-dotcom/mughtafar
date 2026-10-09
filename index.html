@@ -342,6 +342,16 @@ select.search-input{cursor:pointer}
   .section{padding:3rem 1rem}
   .hero-content{padding:1rem}
 }
+/* ── Banner sponsor ── */
+.sponsor-wrap{max-width:1100px;margin:2rem auto;padding:0 1.5rem;text-align:center}
+.sponsor-wrap:empty{display:none}
+#sponsorArtikel{padding:0;margin:2rem 0}
+.sponsor-label{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:.6rem}
+.sponsor-list{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center}
+.sponsor-item{flex:1 1 260px;max-width:560px;display:block;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2);transition:transform .2s,border-color .2s}
+a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
+.sponsor-item img{display:block;width:100%;height:auto;max-height:220px;object-fit:cover}
+#sponsorFooter .sponsor-item{max-width:360px}
 </style>
 </head>
 <body>
@@ -512,6 +522,9 @@ select.search-input{cursor:pointer}
     </div>
   </div>
 
+  <!-- BANNER SPONSOR (BERANDA) -->
+  <div class="sponsor-wrap" id="sponsorBeranda"></div>
+
   <!-- QUOTES SLIDER -->
   <div class="section">
     <div class="section-header reveal">
@@ -674,6 +687,7 @@ select.search-input{cursor:pointer}
       <img id="readerCoverImg" style="width:100%;height:100%;object-fit:cover" alt="">
     </div>
     <div class="content" id="readerContent"></div>
+    <div class="sponsor-wrap" id="sponsorArtikel"></div>
     <div class="divider"></div>
     <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
       <span style="font-size:.85rem;color:var(--text3)">Bagikan:</span>
@@ -816,6 +830,7 @@ select.search-input{cursor:pointer}
           <li><button class="admin-nav-btn" onclick="adminNav('quotes')"><span>💬</span><span>Quotes</span></button></li>
           <li><button class="admin-nav-btn" onclick="adminNav('artikel')"><span>📝</span><span>Artikel</span></button></li>
           <li><button class="admin-nav-btn" onclick="adminNav('pengurus')"><span>👑</span><span>Pengurus</span></button></li>
+          <li><button class="admin-nav-btn" onclick="adminNav('sponsor')"><span>📢</span><span>Sponsor</span></button></li>
           <li><button class="admin-nav-btn" onclick="adminNav('pengaturan')"><span>⚙</span><span>Pengaturan</span></button></li>
         </ul>
         <div style="margin-top:auto;padding-top:2rem">
@@ -908,6 +923,20 @@ select.search-input{cursor:pointer}
             <table class="data-table">
               <thead><tr><th>Nama</th><th>Jabatan</th><th>Aksi</th></tr></thead>
               <tbody id="adminPengurusTable"><tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--text3)">Belum ada data</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ADMIN SPONSOR -->
+        <div class="admin-section" id="admin-sponsor">
+          <div class="admin-header">
+            <h2 class="admin-title">Kelola Sponsor</h2>
+            <button class="btn-primary btn-sm" onclick="openAddSponsor()">+ Tambah Sponsor</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Banner</th><th>Nama</th><th>Posisi</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody id="adminSponsorTable"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text3)">Belum ada sponsor</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1184,6 +1213,39 @@ select.search-input{cursor:pointer}
   </div>
 </div>
 
+<!-- Modal Sponsor -->
+<div class="modal-overlay" id="modalAddSponsor">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalSponsorTitle">Tambah Sponsor</span>
+      <button class="modal-close" onclick="closeModal('modalAddSponsor')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="sponsorEditId">
+      <div class="form-group"><label class="form-label">Nama Sponsor *</label><input type="text" class="form-input" id="sponsorNama" placeholder="Contoh: Toko Berkah Alumni"></div>
+      <div class="form-group"><label class="form-label">Banner *</label>
+        <div class="upload-zone" id="sponsorBannerZone" onclick="document.getElementById('sponsorBannerInput').click()">
+          <div class="upload-icon">🖼️</div><div class="upload-text">Klik untuk pilih gambar banner</div><div class="upload-sub">JPG, PNG, WEBP (maks 2.5MB) · disarankan landscape, mis. 800×200</div>
+        </div>
+        <input type="file" id="sponsorBannerInput" accept="image/*" style="display:none" onchange="previewSponsorBanner(this)">
+        <img id="sponsorPrev" onclick="document.getElementById('sponsorBannerInput').click()" title="Klik untuk ganti gambar" style="display:none;width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-top:.75rem;border:2px solid var(--border2);cursor:pointer">
+      </div>
+      <div class="form-group"><label class="form-label">Link Tujuan (opsional)</label><input type="text" class="form-input" id="sponsorLink" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Posisi Tampil</label>
+        <select class="form-input" id="sponsorPosisi">
+          <option value="beranda">Beranda</option>
+          <option value="footer">Footer (tampil di semua halaman)</option>
+          <option value="artikel">Bawah artikel</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:var(--text2);cursor:pointer"><input type="checkbox" id="sponsorAktif" checked> Tampilkan di website</label>
+      </div>
+      <button class="btn-primary w100 mt1" onclick="saveSponsor()">Simpan Sponsor</button>
+    </div>
+  </div>
+</div>
+
 <!-- Lightbox -->
 <div class="lightbox" id="lightbox">
   <button class="lb-close" onclick="closeLightbox()">✕</button>
@@ -1227,6 +1289,7 @@ select.search-input{cursor:pointer}
     <button onclick="navigate('artikel')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.82rem;padding:.3rem .6rem;border-radius:6px;transition:color .2s" onmouseover="this.style.color='var(--accent2)'" onmouseout="this.style.color='var(--text3)'">Artikel</button>
     <button onclick="navigate('tentang')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.82rem;padding:.3rem .6rem;border-radius:6px;transition:color .2s" onmouseover="this.style.color='var(--accent2)'" onmouseout="this.style.color='var(--text3)'">Tentang</button>
   </nav>
+  <div class="sponsor-wrap" id="sponsorFooter"></div>
   <div class="footer-copy">
     © 2024 Angkatan Mughtafar — Salafiyah Pasuruan. Semua hak dilindungi.
   </div>
@@ -2244,11 +2307,12 @@ function adminNav(sec) {
   if (sec==='quotes') renderAdminQuotes();
   if (sec==='artikel') renderAdminArtikel();
   if (sec==='pengurus') renderAdminPengurus();
+  if (sec==='sponsor') renderAdminSponsors();
   if (sec==='pengaturan') loadSettings();
 }
 
 function refreshAdminData() {
-  renderAdminAnggota(); renderAdminAlbums(); renderAdminQuotes(); renderAdminArtikel(); renderAdminPengurus();
+  renderAdminAnggota(); renderAdminAlbums(); renderAdminQuotes(); renderAdminArtikel(); renderAdminPengurus(); renderAdminSponsors();
   updateStats();
 }
 
@@ -2295,6 +2359,158 @@ async function saveSettings() {
   await loadRemoteSettings(true);
   applyLinks();
   showToast('Pengaturan disimpan ✓');
+}
+
+// ════════════════════════ SPONSOR / BANNER (Supabase) ════════════════════════
+const SPONSOR_POSISI = { beranda: 'Beranda', footer: 'Footer (semua halaman)', artikel: 'Bawah artikel' };
+let selectedSponsorBanner = null;
+
+// Hanya izinkan link http/https (cegah javascript: dan sejenisnya)
+function safeUrl(u) { u = (u || '').trim(); return /^https?:\/\//i.test(u) ? u : ''; }
+
+// Tampilan publik: ambil sponsor aktif lalu isi tiap posisi
+async function renderSponsors() {
+  const slots = {
+    beranda: document.getElementById('sponsorBeranda'),
+    footer: document.getElementById('sponsorFooter'),
+    artikel: document.getElementById('sponsorArtikel'),
+  };
+  const { data, error } = await supabaseClient.from('sponsors').select('*').eq('aktif', true).order('created_at', { ascending: true });
+  Object.values(slots).forEach(el => { if (el) el.innerHTML = ''; });
+  if (error || !data) return;
+  Object.entries(slots).forEach(([pos, el]) => {
+    if (!el) return;
+    const items = data.filter(s => s.posisi === pos);
+    if (!items.length) return;
+    el.innerHTML = '<div class="sponsor-label">Sponsor</div><div class="sponsor-list">' + items.map(s => {
+      const img = `<img src="${escapeHtml(s.gambar_url)}" alt="${escapeHtml(s.nama)}" loading="lazy">`;
+      const url = safeUrl(s.link_url);
+      return url
+        ? `<a class="sponsor-item" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer sponsored" title="${escapeHtml(s.nama)}">${img}</a>`
+        : `<div class="sponsor-item">${img}</div>`;
+    }).join('') + '</div>';
+  });
+}
+
+// ── Panel admin ──
+function previewSponsorBanner(input) {
+  const file = input.files[0]; if (!file) return;
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type)) { showToast('Format banner harus JPG, PNG, atau WEBP'); return; }
+  if (file.size > 2.5*1024*1024) { showToast('Banner terlalu besar, maksimal 2.5MB'); return; }
+  selectedSponsorBanner = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('sponsorPrev');
+    prev.src = e.target.result; prev.style.display = 'block';
+    document.getElementById('sponsorBannerZone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetSponsorForm() {
+  ['sponsorNama','sponsorLink','sponsorEditId'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('sponsorPosisi').value = 'beranda';
+  document.getElementById('sponsorAktif').checked = true;
+  document.getElementById('sponsorBannerInput').value = '';
+  selectedSponsorBanner = null;
+  const prev = document.getElementById('sponsorPrev'); prev.style.display = 'none'; prev.src = '';
+  document.getElementById('sponsorBannerZone').style.display = '';
+}
+
+function openAddSponsor() {
+  resetSponsorForm();
+  document.getElementById('modalSponsorTitle').textContent = 'Tambah Sponsor';
+  openModal('modalAddSponsor');
+}
+
+async function saveSponsor() {
+  const nama = document.getElementById('sponsorNama').value.trim();
+  const posisi = document.getElementById('sponsorPosisi').value;
+  const linkRaw = document.getElementById('sponsorLink').value.trim();
+  const aktif = document.getElementById('sponsorAktif').checked;
+  const editId = document.getElementById('sponsorEditId').value;
+  if (!nama) { showToast('Nama sponsor wajib diisi'); return; }
+  if (linkRaw && !safeUrl(linkRaw)) { showToast('Link harus diawali http:// atau https://'); return; }
+  if (!editId && !selectedSponsorBanner) { showToast('Gambar banner wajib diupload'); return; }
+
+  const btn = document.querySelector('#modalAddSponsor .btn-primary');
+  const label = btn ? btn.textContent : 'Simpan Sponsor';
+  if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+  const done = () => { if (btn) { btn.disabled = false; btn.textContent = label; } };
+
+  const obj = { nama, posisi, link_url: linkRaw || null, aktif };
+  if (selectedSponsorBanner) {
+    const url = await uploadMedia(selectedSponsorBanner, 'sponsor');
+    if (!url) { done(); return; }
+    obj.gambar_url = url;
+  }
+  const { error } = editId
+    ? await supabaseClient.from('sponsors').update(obj).eq('id', editId)
+    : await supabaseClient.from('sponsors').insert(obj);
+  done();
+  if (error) { showToast('Gagal menyimpan: ' + error.message); return; }
+
+  selectedSponsorBanner = null;
+  closeModal('modalAddSponsor');
+  renderAdminSponsors();
+  renderSponsors();
+  showToast('Sponsor disimpan ✓');
+}
+
+async function renderAdminSponsors() {
+  const tbody = document.getElementById('adminSponsorTable');
+  if (!tbody) return;
+  const { data, error } = await supabaseClient.from('sponsors').select('*').order('created_at', { ascending: false });
+  if (error) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--danger)">Gagal memuat data</td></tr>'; return; }
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text3)">Belum ada sponsor</td></tr>'; return; }
+  tbody.innerHTML = data.map(s => `
+    <tr>
+      <td><img src="${escapeHtml(s.gambar_url)}" alt="" style="width:96px;height:40px;object-fit:cover;border-radius:6px"></td>
+      <td style="font-weight:500;color:var(--text)">${escapeHtml(s.nama)}</td>
+      <td>${escapeHtml(SPONSOR_POSISI[s.posisi] || s.posisi)}</td>
+      <td><span class="badge ${s.aktif ? 'badge-accent' : ''}" ${s.aktif ? '' : 'style="color:var(--text3)"'}>${s.aktif ? 'Aktif' : 'Nonaktif'}</span></td>
+      <td style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn-edit" onclick="editSponsor('${s.id}')">Edit</button>
+        <button class="btn-edit" onclick="toggleSponsor('${s.id}', ${s.aktif ? 'false' : 'true'})">${s.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button>
+        <button class="btn-danger" onclick="deleteSponsor('${s.id}')">Hapus</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function editSponsor(id) {
+  const { data: s, error } = await supabaseClient.from('sponsors').select('*').eq('id', id).single();
+  if (error || !s) { showToast('Gagal memuat data sponsor'); return; }
+  resetSponsorForm();
+  document.getElementById('modalSponsorTitle').textContent = 'Edit Sponsor';
+  document.getElementById('sponsorEditId').value = id;
+  document.getElementById('sponsorNama').value = s.nama || '';
+  document.getElementById('sponsorLink').value = s.link_url || '';
+  document.getElementById('sponsorPosisi').value = s.posisi || 'beranda';
+  document.getElementById('sponsorAktif').checked = !!s.aktif;
+  if (s.gambar_url) {
+    const prev = document.getElementById('sponsorPrev');
+    prev.src = s.gambar_url; prev.style.display = 'block';
+    document.getElementById('sponsorBannerZone').style.display = 'none';
+  }
+  openModal('modalAddSponsor');
+}
+
+async function toggleSponsor(id, aktif) {
+  const { error } = await supabaseClient.from('sponsors').update({ aktif }).eq('id', id);
+  if (error) { showToast('Gagal mengubah status: ' + error.message); return; }
+  renderAdminSponsors();
+  renderSponsors();
+  showToast(aktif ? 'Sponsor diaktifkan' : 'Sponsor dinonaktifkan');
+}
+
+async function deleteSponsor(id) {
+  if (!confirm('Hapus sponsor ini?')) return;
+  const { error } = await supabaseClient.from('sponsors').delete().eq('id', id);
+  if (error) { showToast('Gagal menghapus: ' + error.message); return; }
+  renderAdminSponsors();
+  renderSponsors();
+  showToast('Sponsor dihapus');
 }
 
 // ════════════════════════ BACKGROUND BERANDA (Supabase) ════════════════════════
@@ -2421,17 +2637,18 @@ async function changeCredentials() {
 
 async function backupData() {
   showToast('Menyiapkan backup...');
-  const [anggota, albums, album_photos, quotes, artikels, pengurus] = await Promise.all([
+  const [anggota, albums, album_photos, quotes, artikels, pengurus, sponsors] = await Promise.all([
     supabaseClient.from('anggota').select('*'),
     supabaseClient.from('albums').select('*'),
     supabaseClient.from('album_photos').select('*'),
     supabaseClient.from('quotes').select('*'),
     supabaseClient.from('artikels').select('*'),
     supabaseClient.from('pengurus').select('*'),
+    supabaseClient.from('sponsors').select('*'),
   ]);
   const bk = {
     anggota: anggota.data||[], albums: albums.data||[], album_photos: album_photos.data||[],
-    quotes: quotes.data||[], artikels: artikels.data||[], pengurus: pengurus.data||[],
+    quotes: quotes.data||[], artikels: artikels.data||[], pengurus: pengurus.data||[], sponsors: sponsors.data||[],
     settings: await loadRemoteSettings(true)
   };
   const blob = new Blob([JSON.stringify(bk, null, 2)], {type:'application/json'});
@@ -2450,6 +2667,7 @@ async function confirmReset() {
     supabaseClient.from('quotes').delete().neq('id', DUMMY),
     supabaseClient.from('artikels').delete().neq('id', DUMMY),
     supabaseClient.from('pengurus').delete().neq('id', DUMMY),
+    supabaseClient.from('sponsors').delete().neq('id', DUMMY),
   ]);
   refreshAdminData(); updateStats(); showToast('Data direset');
 }
@@ -2526,6 +2744,7 @@ window.addEventListener('load', () => {
     loadHeroBg();
     loadMusic();
     populateKamarOptions();
+    renderSponsors();
     applyLinks();
   }, 1800);
 });
