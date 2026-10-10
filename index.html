@@ -345,13 +345,25 @@ select.search-input{cursor:pointer}
 /* ── Banner sponsor ── */
 .sponsor-wrap{max-width:1100px;margin:2rem auto;padding:0 1.5rem;text-align:center}
 .sponsor-wrap:empty{display:none}
-#sponsorArtikel{padding:0;margin:2rem 0}
 .sponsor-label{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:.6rem}
 .sponsor-list{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center}
 .sponsor-item{flex:1 1 260px;max-width:560px;display:block;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2);transition:transform .2s,border-color .2s}
 a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
-.sponsor-item img{display:block;width:100%;height:auto;max-height:220px;object-fit:cover}
-#sponsorFooter .sponsor-item{max-width:360px}
+.sponsor-item img{display:block;width:100%;height:auto}
+#sponsorBeranda .sponsor-item img{max-height:220px;object-fit:cover}
+.sponsor-atas .sponsor-item{flex:1 1 100%;max-width:970px}
+.sponsor-feed{grid-column:1/-1;text-align:center}
+.sponsor-feed .sponsor-item{max-width:728px;margin:0 auto}
+.sponsor-rail{display:none;position:fixed;top:100px;width:160px;max-height:calc(100vh - 260px);overflow:hidden;z-index:50;flex-direction:column;gap:12px}
+.sponsor-rail:empty{display:none!important}
+.sponsor-rail .sponsor-item{flex:none;width:160px;max-width:160px}
+#sponsorKiri{left:calc((100vw - 1200px)/2 - 176px)}
+#sponsorKanan{right:calc((100vw - 1200px)/2 - 176px)}
+.sponsor-float{position:fixed;left:16px;bottom:16px;z-index:900;width:min(300px,calc(100vw - 32px))}
+.sponsor-float:empty{display:none}
+.sponsor-float .sponsor-item{max-width:none;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.sponsor-float-close{position:absolute;top:-10px;right:-10px;width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-size:.7rem;line-height:1;display:flex;align-items:center;justify-content:center}
+@media (min-width:1600px){.sponsor-rail{display:flex}.sponsor-float{left:200px}}
 </style>
 </head>
 <body>
@@ -397,6 +409,7 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
 
 <!-- ══════════════════════════ BERANDA ══════════════════════════ -->
 <div id="page-beranda" class="page active" style="padding-top:0">
+  <div class="sponsor-wrap sponsor-atas" style="padding-top:90px;margin-top:0;margin-bottom:1rem"></div>
   <section class="hero">
     <div class="hero-bg" id="heroBg"></div>
     <div class="hero-content">
@@ -573,6 +586,7 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
 
 <!-- ══════════════════════════ ANGGOTA ══════════════════════════ -->
 <div id="page-anggota" class="page">
+  <div class="sponsor-wrap sponsor-atas" style="margin-top:1rem;margin-bottom:0"></div>
   <div class="section">
     <div class="section-header">
       <div class="section-label">Komunitas</div>
@@ -594,6 +608,7 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
 
 <!-- ══════════════════════════ DOKUMENTASI ══════════════════════════ -->
 <div id="page-dokumentasi" class="page">
+  <div class="sponsor-wrap sponsor-atas" style="margin-top:1rem;margin-bottom:0"></div>
   <div class="section">
     <div class="section-header">
       <div class="section-label">Galeri</div>
@@ -608,6 +623,7 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
 
 <!-- ALBUM DETAIL (hidden by default) -->
 <div id="page-album-detail" class="page">
+  <div class="sponsor-wrap sponsor-atas" style="margin-top:1rem;margin-bottom:0"></div>
   <div class="section">
     <button class="btn-outline btn-sm mb2" onclick="navigate('dokumentasi')">← Kembali</button>
     <div class="section-header">
@@ -621,6 +637,7 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
 
 <!-- ══════════════════════════ QUOTES ══════════════════════════ -->
 <div id="page-quotes" class="page">
+  <div class="sponsor-wrap sponsor-atas" style="margin-top:1rem;margin-bottom:0"></div>
   <div class="section">
     <div class="section-header">
       <div class="section-label">Inspirasi</div>
@@ -646,6 +663,7 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
 
 <!-- ══════════════════════════ ARTIKEL ══════════════════════════ -->
 <div id="page-artikel" class="page">
+  <div class="sponsor-wrap sponsor-atas" style="margin-top:1rem;margin-bottom:0"></div>
   <div class="section">
     <div class="section-header">
       <div class="section-label">Blog</div>
@@ -671,6 +689,7 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
 
 <!-- ARTIKEL READER -->
 <div id="page-artikel-baca" class="page">
+  <div class="sponsor-wrap sponsor-atas" style="margin-top:1rem;margin-bottom:0"></div>
   <div class="reading-bar" id="readingBar" style="width:0%"></div>
   <div class="article-reader">
     <button class="btn-outline btn-sm mb2" onclick="navigate('artikel')">← Kembali</button>
@@ -687,7 +706,6 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
       <img id="readerCoverImg" style="width:100%;height:100%;object-fit:cover" alt="">
     </div>
     <div class="content" id="readerContent"></div>
-    <div class="sponsor-wrap" id="sponsorArtikel"></div>
     <div class="divider"></div>
     <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
       <span style="font-size:.85rem;color:var(--text3)">Bagikan:</span>
@@ -698,6 +716,7 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
 
 <!-- ══════════════════════════ TENTANG ══════════════════════════ -->
 <div id="page-tentang" class="page">
+  <div class="sponsor-wrap sponsor-atas" style="margin-top:1rem;margin-bottom:0"></div>
   <div class="section">
     <div class="section-header">
       <div class="section-label">Profil</div>
@@ -1225,18 +1244,22 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
       <div class="form-group"><label class="form-label">Nama Sponsor *</label><input type="text" class="form-input" id="sponsorNama" placeholder="Contoh: Toko Berkah Alumni"></div>
       <div class="form-group"><label class="form-label">Banner *</label>
         <div class="upload-zone" id="sponsorBannerZone" onclick="document.getElementById('sponsorBannerInput').click()">
-          <div class="upload-icon">🖼️</div><div class="upload-text">Klik untuk pilih gambar banner</div><div class="upload-sub">JPG, PNG, WEBP (maks 2.5MB) · disarankan landscape, mis. 800×200</div>
+          <div class="upload-icon">🖼️</div><div class="upload-text">Klik untuk pilih gambar banner</div><div class="upload-sub">JPG, PNG, WEBP (maks 2.5MB) · ukuran sesuai posisi, lihat petunjuk di bawah</div>
         </div>
         <input type="file" id="sponsorBannerInput" accept="image/*" style="display:none" onchange="previewSponsorBanner(this)">
         <img id="sponsorPrev" onclick="document.getElementById('sponsorBannerInput').click()" title="Klik untuk ganti gambar" style="display:none;width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-top:.75rem;border:2px solid var(--border2);cursor:pointer">
       </div>
       <div class="form-group"><label class="form-label">Link Tujuan (opsional)</label><input type="text" class="form-input" id="sponsorLink" placeholder="https://..."></div>
       <div class="form-group"><label class="form-label">Posisi Tampil</label>
-        <select class="form-input" id="sponsorPosisi">
-          <option value="beranda">Beranda</option>
-          <option value="footer">Footer (tampil di semua halaman)</option>
-          <option value="artikel">Bawah artikel</option>
+        <select class="form-input" id="sponsorPosisi" onchange="updateSponsorHint()">
+          <option value="atas">Atas (semua halaman)</option>
+          <option value="samping_kiri">Samping kiri (layar lebar)</option>
+          <option value="samping_kanan">Samping kanan (layar lebar)</option>
+          <option value="melayang">Melayang (pojok kiri bawah)</option>
+          <option value="sela_artikel">Sela daftar artikel</option>
+          <option value="beranda">Beranda (tengah halaman)</option>
         </select>
+        <div id="sponsorHint" style="font-size:.78rem;color:var(--text3);margin-top:.4rem"></div>
       </div>
       <div class="form-group">
         <label style="display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:var(--text2);cursor:pointer"><input type="checkbox" id="sponsorAktif" checked> Tampilkan di website</label>
@@ -1289,7 +1312,6 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
     <button onclick="navigate('artikel')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.82rem;padding:.3rem .6rem;border-radius:6px;transition:color .2s" onmouseover="this.style.color='var(--accent2)'" onmouseout="this.style.color='var(--text3)'">Artikel</button>
     <button onclick="navigate('tentang')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.82rem;padding:.3rem .6rem;border-radius:6px;transition:color .2s" onmouseover="this.style.color='var(--accent2)'" onmouseout="this.style.color='var(--text3)'">Tentang</button>
   </nav>
-  <div class="sponsor-wrap" id="sponsorFooter"></div>
   <div class="footer-copy">
     © 2024 Angkatan Mughtafar — Salafiyah Pasuruan. Semua hak dilindungi.
   </div>
@@ -1297,6 +1319,11 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
 
 <!-- WhatsApp Float -->
 <a class="float-wa" id="floatWA" href="https://wa.me/6281234567890" target="_blank" title="Hubungi Admin">💬</a>
+
+<!-- Banner sponsor: samping & melayang -->
+<aside class="sponsor-rail" id="sponsorKiri" aria-label="Sponsor"></aside>
+<aside class="sponsor-rail" id="sponsorKanan" aria-label="Sponsor"></aside>
+<div class="sponsor-float" id="sponsorFloat"></div>
 
 <!-- Music Float -->
 <button class="float-music" id="musicBtn" onclick="toggleMusic()" title="Musik Sholawat">♫</button>
@@ -1368,7 +1395,7 @@ function navigate(page, customHash) {
   const isAdmin = page === 'admin';
   const navEl = document.getElementById('navbar');
   if (navEl) navEl.style.display = isAdmin ? 'none' : 'flex';
-  document.querySelectorAll('.float-wa,.float-music').forEach(el => { el.style.display = isAdmin ? 'none' : ''; });
+  document.querySelectorAll('.float-wa,.float-music,.sponsor-rail,.sponsor-float').forEach(el => { el.style.display = isAdmin ? 'none' : ''; });
 
   // Setiap halaman punya alamat URL sendiri (lewat #hash), supaya tombol
   // Back/Forward browser berfungsi dan link bisa dibagikan ke halaman
@@ -2029,6 +2056,7 @@ function filterArtikel() {
       </div>
     </div>
   `).join('');
+  injectFeedSponsors(grid);
 }
 
 function stripHtml(html) {
@@ -2362,33 +2390,89 @@ async function saveSettings() {
 }
 
 // ════════════════════════ SPONSOR / BANNER (Supabase) ════════════════════════
-const SPONSOR_POSISI = { beranda: 'Beranda', footer: 'Footer (semua halaman)', artikel: 'Bawah artikel' };
+const SPONSOR_POSISI = { atas: 'Atas (semua halaman)', samping_kiri: 'Samping kiri', samping_kanan: 'Samping kanan', melayang: 'Melayang', sela_artikel: 'Sela daftar artikel', beranda: 'Beranda' };
+const SPONSOR_HINT = {
+  atas: 'Banner lebar, mis. 970×250 atau 728×90. Tampil di bagian atas semua halaman.',
+  samping_kiri: 'Banner tegak, mis. 160×600. Hanya tampil di layar lebar (laptop/desktop), tidak di HP.',
+  samping_kanan: 'Banner tegak, mis. 160×600. Hanya tampil di layar lebar (laptop/desktop), tidak di HP.',
+  melayang: 'Banner kecil, mis. 300×250. Muncul di pojok kiri bawah dan bisa ditutup pengunjung. Kalau ada beberapa yang aktif, yang terbaru yang tampil.',
+  sela_artikel: 'Banner lebar, mis. 728×90. Diselipkan setiap 3 artikel di halaman Artikel.',
+  beranda: 'Banner lebar, mis. 800×200. Tampil di tengah halaman Beranda.'
+};
+function updateSponsorHint() {
+  const el = document.getElementById('sponsorHint');
+  const pos = document.getElementById('sponsorPosisi');
+  if (el && pos) el.textContent = SPONSOR_HINT[pos.value] || '';
+}
 let selectedSponsorBanner = null;
 
 // Hanya izinkan link http/https (cegah javascript: dan sejenisnya)
 function safeUrl(u) { u = (u || '').trim(); return /^https?:\/\//i.test(u) ? u : ''; }
 
 // Tampilan publik: ambil sponsor aktif lalu isi tiap posisi
+let sponsorsCache = [];
+
+function sponsorItemHtml(s) {
+  const img = `<img src="${escapeHtml(s.gambar_url)}" alt="${escapeHtml(s.nama)}" loading="lazy">`;
+  const url = safeUrl(s.link_url);
+  return url
+    ? `<a class="sponsor-item" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer sponsored" title="${escapeHtml(s.nama)}">${img}</a>`
+    : `<div class="sponsor-item">${img}</div>`;
+}
+function sponsorBlockHtml(items) {
+  return '<div class="sponsor-label">Sponsor</div><div class="sponsor-list">' + items.map(sponsorItemHtml).join('') + '</div>';
+}
+
 async function renderSponsors() {
-  const slots = {
-    beranda: document.getElementById('sponsorBeranda'),
-    footer: document.getElementById('sponsorFooter'),
-    artikel: document.getElementById('sponsorArtikel'),
-  };
   const { data, error } = await supabaseClient.from('sponsors').select('*').eq('aktif', true).order('created_at', { ascending: true });
-  Object.values(slots).forEach(el => { if (el) el.innerHTML = ''; });
-  if (error || !data) return;
-  Object.entries(slots).forEach(([pos, el]) => {
-    if (!el) return;
-    const items = data.filter(s => s.posisi === pos);
-    if (!items.length) return;
-    el.innerHTML = '<div class="sponsor-label">Sponsor</div><div class="sponsor-list">' + items.map(s => {
-      const img = `<img src="${escapeHtml(s.gambar_url)}" alt="${escapeHtml(s.nama)}" loading="lazy">`;
-      const url = safeUrl(s.link_url);
-      return url
-        ? `<a class="sponsor-item" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer sponsored" title="${escapeHtml(s.nama)}">${img}</a>`
-        : `<div class="sponsor-item">${img}</div>`;
-    }).join('') + '</div>';
+  sponsorsCache = (!error && data) ? data : [];
+  const by = pos => sponsorsCache.filter(s => s.posisi === pos);
+
+  // Atas: diisi di setiap halaman publik
+  const atas = by('atas');
+  document.querySelectorAll('.sponsor-atas').forEach(el => { el.innerHTML = atas.length ? sponsorBlockHtml(atas) : ''; });
+
+  // Beranda (tengah halaman)
+  const ber = document.getElementById('sponsorBeranda');
+  if (ber) { const b = by('beranda'); ber.innerHTML = b.length ? sponsorBlockHtml(b) : ''; }
+
+  // Samping kiri & kanan (hanya tampil di layar lebar, diatur lewat CSS)
+  [['sponsorKiri', 'samping_kiri'], ['sponsorKanan', 'samping_kanan']].forEach(([id, pos]) => {
+    const el = document.getElementById(id); if (!el) return;
+    const items = by(pos);
+    el.innerHTML = items.length ? '<div class="sponsor-label">Sponsor</div>' + items.map(sponsorItemHtml).join('') : '';
+  });
+
+  // Melayang: satu banner (yang terbaru), hilang kalau sudah ditutup di sesi ini
+  const fl = document.getElementById('sponsorFloat');
+  if (fl) {
+    const f = by('melayang');
+    let closed = false;
+    try { closed = sessionStorage.getItem('mug_float_closed') === '1'; } catch (e) {}
+    fl.innerHTML = (f.length && !closed)
+      ? sponsorItemHtml(f[f.length - 1]) + '<button class="sponsor-float-close" onclick="closeSponsorFloat()" aria-label="Tutup iklan">✕</button>'
+      : '';
+  }
+
+  // Sela daftar artikel: render ulang kalau halaman Artikel sedang terbuka
+  if (currentPage === 'artikel') filterArtikel();
+}
+
+function closeSponsorFloat() {
+  try { sessionStorage.setItem('mug_float_closed', '1'); } catch (e) {}
+  const fl = document.getElementById('sponsorFloat');
+  if (fl) fl.innerHTML = '';
+}
+
+// Sisipkan banner setiap 3 artikel (tidak setelah artikel terakhir)
+function injectFeedSponsors(grid) {
+  const slots = sponsorsCache.filter(s => s.posisi === 'sela_artikel');
+  if (!grid || !slots.length) return;
+  const cards = Array.from(grid.querySelectorAll(':scope > .article-card'));
+  cards.forEach((card, i) => {
+    if ((i + 1) % 3 !== 0 || i === cards.length - 1) return;
+    const s = slots[Math.floor(i / 3) % slots.length];
+    card.insertAdjacentHTML('afterend', '<div class="sponsor-feed"><div class="sponsor-label">Sponsor</div>' + sponsorItemHtml(s) + '</div>');
   });
 }
 
@@ -2409,12 +2493,13 @@ function previewSponsorBanner(input) {
 
 function resetSponsorForm() {
   ['sponsorNama','sponsorLink','sponsorEditId'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('sponsorPosisi').value = 'beranda';
+  document.getElementById('sponsorPosisi').value = 'atas';
   document.getElementById('sponsorAktif').checked = true;
   document.getElementById('sponsorBannerInput').value = '';
   selectedSponsorBanner = null;
   const prev = document.getElementById('sponsorPrev'); prev.style.display = 'none'; prev.src = '';
   document.getElementById('sponsorBannerZone').style.display = '';
+  updateSponsorHint();
 }
 
 function openAddSponsor() {
@@ -2486,7 +2571,8 @@ async function editSponsor(id) {
   document.getElementById('sponsorEditId').value = id;
   document.getElementById('sponsorNama').value = s.nama || '';
   document.getElementById('sponsorLink').value = s.link_url || '';
-  document.getElementById('sponsorPosisi').value = s.posisi || 'beranda';
+  document.getElementById('sponsorPosisi').value = s.posisi || 'atas';
+  updateSponsorHint();
   document.getElementById('sponsorAktif').checked = !!s.aktif;
   if (s.gambar_url) {
     const prev = document.getElementById('sponsorPrev');
