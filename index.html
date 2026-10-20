@@ -363,6 +363,10 @@ a.sponsor-item:hover{transform:translateY(-2px);border-color:var(--border2)}
 .sponsor-float:empty{display:none}
 .sponsor-float .sponsor-item{max-width:none;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 .sponsor-float-close{position:absolute;top:-10px;right:-10px;width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-size:.7rem;line-height:1;display:flex;align-items:center;justify-content:center}
+.sponsor-rail-head{display:flex;align-items:center;justify-content:space-between}
+.sponsor-rail-head .sponsor-label{margin:0}
+.sponsor-rail-close{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-size:.65rem;line-height:1;display:flex;align-items:center;justify-content:center}
+.sponsor-rail-close:hover{color:var(--text)}
 @media (min-width:1600px){.sponsor-rail{display:flex}.sponsor-float{left:200px}}
 </style>
 </head>
@@ -2393,8 +2397,8 @@ async function saveSettings() {
 const SPONSOR_POSISI = { atas: 'Atas (semua halaman)', samping_kiri: 'Samping kiri', samping_kanan: 'Samping kanan', melayang: 'Melayang', sela_artikel: 'Sela daftar artikel', beranda: 'Beranda' };
 const SPONSOR_HINT = {
   atas: 'Banner lebar, mis. 970×250 atau 728×90. Tampil di bagian atas semua halaman.',
-  samping_kiri: 'Banner tegak, mis. 160×600. Hanya tampil di layar lebar (laptop/desktop), tidak di HP.',
-  samping_kanan: 'Banner tegak, mis. 160×600. Hanya tampil di layar lebar (laptop/desktop), tidak di HP.',
+  samping_kiri: 'Banner tegak, mis. 160×600. Hanya tampil di layar lebar (laptop/desktop), tidak di HP. Ada tombol tutup.',
+  samping_kanan: 'Banner tegak, mis. 160×600. Hanya tampil di layar lebar (laptop/desktop), tidak di HP. Ada tombol tutup.',
   melayang: 'Banner kecil, mis. 300×250. Muncul di pojok kiri bawah dan bisa ditutup pengunjung. Kalau ada beberapa yang aktif, yang terbaru yang tampil.',
   sela_artikel: 'Banner lebar, mis. 728×90. Diselipkan setiap 3 artikel di halaman Artikel.',
   beranda: 'Banner lebar, mis. 800×200. Tampil di tengah halaman Beranda.'
@@ -2437,10 +2441,14 @@ async function renderSponsors() {
   if (ber) { const b = by('beranda'); ber.innerHTML = b.length ? sponsorBlockHtml(b) : ''; }
 
   // Samping kiri & kanan (hanya tampil di layar lebar, diatur lewat CSS)
-  [['sponsorKiri', 'samping_kiri'], ['sponsorKanan', 'samping_kanan']].forEach(([id, pos]) => {
+  [['sponsorKiri', 'samping_kiri', 'kiri'], ['sponsorKanan', 'samping_kanan', 'kanan']].forEach(([id, pos, side]) => {
     const el = document.getElementById(id); if (!el) return;
     const items = by(pos);
-    el.innerHTML = items.length ? '<div class="sponsor-label">Sponsor</div>' + items.map(sponsorItemHtml).join('') : '';
+    let closed = false;
+    try { closed = sessionStorage.getItem('mug_rail_' + side + '_closed') === '1'; } catch (e) {}
+    el.innerHTML = (items.length && !closed)
+      ? '<div class="sponsor-rail-head"><span class="sponsor-label">Sponsor</span><button class="sponsor-rail-close" onclick="closeSponsorRail(\'' + side + '\')" aria-label="Tutup iklan samping ' + side + '">✕</button></div>' + items.map(sponsorItemHtml).join('')
+      : '';
   });
 
   // Melayang: satu banner (yang terbaru), hilang kalau sudah ditutup di sesi ini
@@ -2462,6 +2470,14 @@ function closeSponsorFloat() {
   try { sessionStorage.setItem('mug_float_closed', '1'); } catch (e) {}
   const fl = document.getElementById('sponsorFloat');
   if (fl) fl.innerHTML = '';
+}
+
+// Tutup banner samping (per sisi), berlaku selama sesi browser
+function closeSponsorRail(side) {
+  if (side !== 'kiri' && side !== 'kanan') return;
+  try { sessionStorage.setItem('mug_rail_' + side + '_closed', '1'); } catch (e) {}
+  const el = document.getElementById(side === 'kiri' ? 'sponsorKiri' : 'sponsorKanan');
+  if (el) el.innerHTML = '';
 }
 
 // Sisipkan banner setiap 3 artikel (tidak setelah artikel terakhir)
